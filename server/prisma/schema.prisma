@@ -16,3 +16,19 @@ model movies {
   movie_id Int @unique
   rating   Int @default(300)
 }
+
+model MovieBattle {
+  id Int @id @default(autoincrement()) 
+  movie1Id Int
+  movie2Id Int
+  votes Vote[]
+}
+
+model Vote {
+  id Int @id @default(autoincrement())
+  battle MovieBattle @relation(fields: [battleId], references: [id])
+  battleId Int
+  movieId Int
+
+  @@index([battleId])
+}

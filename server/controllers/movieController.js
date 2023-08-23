@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient;
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 
 const selectMovieUpdate = async (req, res) => {
   const { id, otherMovieId } = req.body;
@@ -66,12 +66,11 @@ const selectMovieUpdate = async (req, res) => {
   }
 };
 
-
 const prefferedMovieList = async (req, res) => {
   try {
     const topMovies = await prisma.movies.findMany({
       orderBy: {
-        rating: 'desc'
+        rating: "desc",
       },
       take: 20, // Only take the top 20 movies
     });
@@ -79,10 +78,41 @@ const prefferedMovieList = async (req, res) => {
     res.send(topMovies);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'An error occurred while fetching preferred movies' });
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching preferred movies" });
+  }
+};
+
+const createBattle = async (req, res) => {
+  try {
+    const { movie1Id, movie2Id } = req.body;
+
+    const battle = await prisma.movieBattle.findFirst({
+      where: {
+        OR: [
+          { movie1Id: movie1Id, movie2Id: movie2Id },
+          { movie1Id: movie2Id, movie2Id: movie1Id }
+        ],
+      },
+    });
+
+    if (battle) {
+      res.status(405).json({ message: "This battle already exists in the battleground." });
+    } else {
+      await prisma.movieBattle.create({
+        data: {
+          movie1Id: movie1Id,
+          movie2Id: movie2Id,
+        },
+      });
+      res.status(200).json({ message: "Movie Battle Created Successfully" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while creating the battle" });
   }
 };
 
 
-
-module.exports = {selectMovieUpdate, prefferedMovieList};
+module.exports = { selectMovieUpdate, prefferedMovieList, createBattle };
