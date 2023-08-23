@@ -115,4 +115,17 @@ const createBattle = async (req, res) => {
 };
 
 
-module.exports = { selectMovieUpdate, prefferedMovieList, createBattle };
+const getBattles = async(req, res) => {
+  try {
+    const availableBattles = await prisma.movieBattle.findMany();
+
+    res.send(availableBattles);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "An error occurred while fetching Battles" });
+  }
+}
+
+module.exports = { selectMovieUpdate, prefferedMovieList, createBattle, getBattles };
