@@ -66,13 +66,25 @@ const selectMovieUpdate = async (req, res) => {
   }
 };
 
+//In the below function i want to reset the list every week 
+
+const resetMovieList = async (req, res) => {  
+  try {
+    await prisma.movies.deleteMany();
+    res.status(200).json({ message: "Movie list reset" });
+  } catch (error) {
+    console.log("ERROR:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+}
+
 const prefferedMovieList = async (req, res) => {
   try {
     const topMovies = await prisma.movies.findMany({
       orderBy: {
         rating: "desc",
       },
-      take: 20, // Only take the top 20 movies
+      take: 5, // Only take the top 20 movies
     });
 
     res.send(topMovies);
@@ -92,13 +104,15 @@ const createBattle = async (req, res) => {
       where: {
         OR: [
           { movie1Id: movie1Id, movie2Id: movie2Id },
-          { movie1Id: movie2Id, movie2Id: movie1Id }
+          { movie1Id: movie2Id, movie2Id: movie1Id },
         ],
       },
     });
 
     if (battle) {
-      res.status(405).json({ message: "This battle already exists in the battleground." });
+      res
+        .status(405)
+        .json({ message: "This battle already exists in the battleground." });
     } else {
       await prisma.movieBattle.create({
         data: {
@@ -110,22 +124,50 @@ const createBattle = async (req, res) => {
     }
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "An error occurred while creating the battle" });
+    res
+      .status(500)
+      .json({ error: "An error occurred while creating the battle" });
   }
 };
 
-
-const getBattles = async(req, res) => {
+const getBattles = async (req, res) => {
   try {
     const availableBattles = await prisma.movieBattle.findMany();
 
     res.send(availableBattles);
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ error: "An error occurred while fetching Battles" });
+    res.status(500).json({ error: "An error occurred while fetching Battles" });
   }
-}
+};
 
-module.exports = { selectMovieUpdate, prefferedMovieList, createBattle, getBattles };
+const getBattle = async (req, res) => {
+  const { id } = req.params;
+
+  const noId = parseInt(id)
+
+  try {
+    const battleDetails = await prisma.movieBattle.findUnique({
+      where: {
+        id: noId
+      }
+    });
+
+    if (!battleDetails) {
+      return res.status(404).json({ error: "Battle details not found." });
+    }
+
+    res.status(200).json({ battleDetails });
+  } catch (error) {
+    console.error("Error fetching battle details:", error);
+    res.status(500).json({ error: "An error occurred while fetching battle details." });
+  }
+};
+
+module.exports = {
+  selectMovieUpdate,
+  prefferedMovieList,
+  createBattle,
+  getBattles,
+  getBattle,
+};
